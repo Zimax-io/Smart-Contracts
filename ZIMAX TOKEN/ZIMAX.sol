@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 //
-// HODI PROTOCOL COPYRIGHT (C) 2022 
+// HODI PROTOCOL COPYRIGHT (C) 2022
 
 pragma solidity ^0.7.4;
 
@@ -284,7 +284,7 @@ interface IPancakeSwapRouter{
 			uint deadline,
 			bool approveMax, uint8 v, bytes32 r, bytes32 s
 		) external returns (uint amountETH);
-	
+
 		function swapExactTokensForTokensSupportingFeeOnTransferTokens(
 			uint amountIn,
 			uint amountOutMin,
@@ -423,6 +423,7 @@ contract Hodi is ERC20Detailed, Ownable {
     uint256 public treasuryFee = 25;    // 2.5%
     uint256 public hodInsuranceFundFee = 50;   // 5%
     uint256 public sellFee = 20;   //2%
+    uint256 public early_sellFee = 340;   //34%
     uint256 public firePitFee = 25;   //2,5%
     uint256 public totalFee = liquidityFee.add(treasuryFee).add(hodInsuranceFundFee).add(firePitFee);   // 16%
     uint256 public feeDenominator = 1000;
@@ -444,7 +445,7 @@ contract Hodi is ERC20Detailed, Ownable {
         inSwap = false;
     }
 
-    uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY); 
+    uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY);
 
     uint256 private constant MAX_SUPPLY = 325 * 10**7 * 10**DECIMALS;   // 3.25 billion
 
@@ -462,14 +463,14 @@ contract Hodi is ERC20Detailed, Ownable {
 
     constructor() ERC20Detailed("ZIMAX", "ZMX", uint8(DECIMALS)) Ownable() {
 
-        router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E); 
+        router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         pair = IPancakeSwapFactory(router.factory()).createPair(
             router.WETH(),
             address(this)
         );
-      
+
         autoLiquidityReceiver = 0x6EAe192Cb689824fDeD3a1C8418629d361FCdC93;
-        treasuryReceiver = 0xc7b6D9FE6599608Ba73C2f698d2194282f5A6fDA; 
+        treasuryReceiver = 0xc7b6D9FE6599608Ba73C2f698d2194282f5A6fDA;
         hodInsuranceFundReceiver = 0x5d05722454f2fEA28e91A776C536a047DF31Ca20;
         firePit = 0x000000000000000000000000000000000000dEaD;
 
@@ -494,7 +495,7 @@ contract Hodi is ERC20Detailed, Ownable {
     }
 
     function rebase() internal {
-        
+
         if ( inSwap ) return;
         uint256 rebaseRate;
         uint256 deltaTimeFromInit = block.timestamp - _initRebaseStartTime;
@@ -541,7 +542,7 @@ contract Hodi is ERC20Detailed, Ownable {
         address to,
         uint256 value
     ) external override validRecipient(to) returns (bool) {
-        
+
         if (_allowedFragments[from][msg.sender] != uint256(-1)) {
             _allowedFragments[from][msg.sender] = _allowedFragments[from][
                 msg.sender
@@ -616,8 +617,15 @@ contract Hodi is ERC20Detailed, Ownable {
             _treasuryFee = treasuryFee.add(sellFee);
         }
 
+        //      HERE ADD IF TOKENS ARE BOUGHT LESS THEN 3 MONTH early_sellFee
+        //         if (recipient == pair) {
+        //            _totalFee = totalFee.add(sellFee);
+        //            _treasuryFee = treasuryFee.add(early_sellFee);
+        //        }
+
+
         uint256 feeAmount = gonAmount.div(feeDenominator).mul(_totalFee);
-       
+
         _gonBalances[firePit] = _gonBalances[firePit].add(
             gonAmount.div(feeDenominator).mul(firePitFee)
         );
@@ -627,7 +635,7 @@ contract Hodi is ERC20Detailed, Ownable {
         _gonBalances[autoLiquidityReceiver] = _gonBalances[autoLiquidityReceiver].add(
             gonAmount.div(feeDenominator).mul(liquidityFee)
         );
-        
+
         emit Transfer(sender, address(this), feeAmount.div(_gonsPerFragment));
         return gonAmount.sub(feeAmount);
     }
@@ -689,7 +697,7 @@ contract Hodi is ERC20Detailed, Ownable {
         path[0] = address(this);
         path[1] = router.WETH();
 
-        
+
         router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             amountToSwap,
             0,
@@ -737,7 +745,7 @@ contract Hodi is ERC20Detailed, Ownable {
         view
         returns (bool)
     {
-        return 
+        return
             (pair == from || pair == to) &&
             !_isFeeExempt[from];
     }
@@ -753,16 +761,16 @@ contract Hodi is ERC20Detailed, Ownable {
 
     function shouldAddLiquidity() internal view returns (bool) {
         return
-            _autoAddLiquidity && 
-            !inSwap && 
+            _autoAddLiquidity &&
+            !inSwap &&
             msg.sender != pair &&
             block.timestamp >= (_lastAddLiquidityTime + 2 days);
     }
 
     function shouldSwapBack() internal view returns (bool) {
-        return 
+        return
             !inSwap &&
-            msg.sender != pair  ; 
+            msg.sender != pair  ;
     }
 
     function setAutoRebase(bool _flag) external onlyOwner {
@@ -884,9 +892,9 @@ contract Hodi is ERC20Detailed, Ownable {
 
     function setBotBlacklist(address _botAddress, bool _flag) external onlyOwner {
         require(isContract(_botAddress), "only contract address, not allowed exteranlly owned account");
-        blacklist[_botAddress] = _flag;    
+        blacklist[_botAddress] = _flag;
     }
-    
+
     function setPairAddress(address _pairAddress) public onlyOwner {
         pair = _pairAddress;
     }
@@ -894,11 +902,11 @@ contract Hodi is ERC20Detailed, Ownable {
     function setLP(address _address) external onlyOwner {
         pairContract = IPancakeSwapPair(_address);
     }
-    
+
     function totalSupply() external view override returns (uint256) {
         return _totalSupply;
     }
-   
+
     function balanceOf(address who) external view override returns (uint256) {
         return _gonBalances[who].div(_gonsPerFragment);
     }
