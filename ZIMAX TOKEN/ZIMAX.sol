@@ -417,15 +417,15 @@ contract Hodi is ERC20Detailed, Ownable {
     uint256 public constant MAX_UINT256 = ~uint256(0);
     uint8 public constant RATE_DECIMALS = 11;
 
-    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 35 * 10**5 * 10**DECIMALS;   // 3.5 million
+    uint256 private constant INITIAL_FRAGMENTS_SUPPLY = 280 * 10*6 * 10**DECIMALS;   // 280 millions
 
+    uint256 public penaltyFee = 340;      // 34%
     uint256 public liquidityFee = 40;    // 4%
     uint256 public treasuryFee = 25;    // 2.5%
     uint256 public hodInsuranceFundFee = 50;   // 5%
     uint256 public sellFee = 20;   //2%
-    uint256 public early_sellFee = 340;   //34%
     uint256 public firePitFee = 25;   //2,5%
-    uint256 public totalFee = liquidityFee.add(treasuryFee).add(hodInsuranceFundFee).add(firePitFee);   // 16%
+    uint256 public totalFee = liquidityFee.add(treasuryFee).add(hodInsuranceFundFee).add(firePitFee);   // 14%
     uint256 public feeDenominator = 1000;
 
     address DEAD = 0x000000000000000000000000000000000000dEaD;
@@ -447,7 +447,7 @@ contract Hodi is ERC20Detailed, Ownable {
 
     uint256 private constant TOTAL_GONS = MAX_UINT256 - (MAX_UINT256 % INITIAL_FRAGMENTS_SUPPLY);
 
-    uint256 private constant MAX_SUPPLY = 325 * 10**7 * 10**DECIMALS;   // 3.25 billion
+    uint256 private constant MAX_SUPPLY = 200 * 10**7 * 10**DECIMALS;   // 2 billions
 
     bool public _autoRebase;
     bool public _autoAddLiquidity;
@@ -504,13 +504,13 @@ contract Hodi is ERC20Detailed, Ownable {
         uint256 epoch = times.mul(15);
 
         if (deltaTimeFromInit < (365 days)) {
-            rebaseRate = 4386133;
+            rebaseRate = -287;
         } else if (deltaTimeFromInit >= (365 days)) {
-            rebaseRate = 2110000;
+            rebaseRate = -299;
         } else if (deltaTimeFromInit >= ((15 * 365 days) / 10)) {
-            rebaseRate = 140000;
+            rebaseRate = -307.87;
         } else if (deltaTimeFromInit >= (7 * 365 days)) {
-            rebaseRate = 20000;
+            rebaseRate = -343.59;
         }
 
         for (uint256 i = 0; i < times; i++) {
@@ -613,15 +613,16 @@ contract Hodi is ERC20Detailed, Ownable {
         uint256 _treasuryFee = treasuryFee;
 
         if (recipient == pair) {
+
+          uint256 deltaTimeFromInit = block.timestamp - _initRebaseStartTime;
+          if (deltaTimeFromInit < (90 days)) {    // < 3 months
+            _totalFee = totalFee.add(sellFee).add(penaltyFee);
+            _treasuryFee = treasuryFee.add(sellFee).add(penaltyFee);
+          } else {   // >=3 months
             _totalFee = totalFee.add(sellFee);
             _treasuryFee = treasuryFee.add(sellFee);
+          }
         }
-
-        //      HERE ADD IF TOKENS ARE BOUGHT LESS THEN 3 MONTH early_sellFee
-        //         if (recipient == pair) {
-        //            _totalFee = totalFee.add(sellFee);
-        //            _treasuryFee = treasuryFee.add(early_sellFee);
-        //        }
 
 
         uint256 feeAmount = gonAmount.div(feeDenominator).mul(_totalFee);
