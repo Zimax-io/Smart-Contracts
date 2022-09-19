@@ -469,9 +469,9 @@ contract Hodi is ERC20Detailed, Ownable {
             address(this)
         );
 
-        autoLiquidityReceiver = 0x6EAe192Cb689824fDeD3a1C8418629d361FCdC93;
-        treasuryReceiver = 0xc7b6D9FE6599608Ba73C2f698d2194282f5A6fDA;
-        hodInsuranceFundReceiver = 0x5d05722454f2fEA28e91A776C536a047DF31Ca20;
+        autoLiquidityReceiver = 0x32a9E49748F8a35980b1d419bb9663050E0fB029;
+        treasuryReceiver = 0xB3c6db10a93f8fCa24078D48de56909Eca674796;
+        hodInsuranceFundReceiver = 0x3c04f69856da1bd8421ccbBd74e2597F2E3903e1;
         firePit = 0x000000000000000000000000000000000000dEaD;
 
         _allowedFragments[address(this)][address(router)] = uint256(-1);
