@@ -474,8 +474,8 @@ contract Zimax is ERC20Detailed, Ownable {
         InsuranceFundReceiver = 0x3c04f69856da1bd8421ccbBd74e2597F2E3903e1;
         firePit = 0x000000000000000000000000000000000000dEaD;
 
-        _allowedFragments[address(this)][address(router)] = uint256(-1);
-        _allowedFragments[address(this)][address(owner())] = uint256(-1);
+        _allowedFragments[address(this)][address(router)] = uint256(0);
+        _allowedFragments[address(this)][address(owner())] = uint256(0);
         pairContract = IPancakeSwapPair(pair);
 
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
@@ -497,22 +497,21 @@ contract Zimax is ERC20Detailed, Ownable {
     function rebase() internal {
 
         if ( inSwap ) return;
-        uint256 rebaseRate;
-        uint256 deltaTimeFromInit = block.timestamp - _initRebaseStartTime;
+        uint256 rebaseRate = 888002;
+        // uint256 deltaTimeFromInit = block.timestamp - _initRebaseStartTime;
         uint256 deltaTime = block.timestamp - _lastRebasedTime;
         uint256 times = deltaTime.div(15 minutes);
         uint256 epoch = times.mul(15);
 
-        if (deltaTimeFromInit < (365 days)) {
-        rebaseRate = 888002;
-
-        //     } else if (deltaTimeFromInit >= (365 days)) {
-        //     rebaseRate = -299;
-        //     } else if (deltaTimeFromInit >= ((15 * 365 days) / 10)) {
-        //     rebaseRate = -307.87;
-        //     } else if (deltaTimeFromInit >= (7 * 365 days)) {
-        //     rebaseRate = -343.59;
-        //     }
+        // if (deltaTimeFromInit < (365 days)) {
+        //     rebaseRate = 2355;
+        // } else if (deltaTimeFromInit >= (365 days)) {
+        //     rebaseRate = 211;
+        // } else if (deltaTimeFromInit >= ((15 * 365 days) / 10)) {
+        //     rebaseRate = 14;
+        // } else if (deltaTimeFromInit >= (7 * 365 days)) {
+        //     rebaseRate = 2;
+        // }
 
         for (uint256 i = 0; i < times; i++) {
             _totalSupply = _totalSupply
@@ -544,7 +543,7 @@ contract Zimax is ERC20Detailed, Ownable {
         uint256 value
     ) external override validRecipient(to) returns (bool) {
 
-        if (_allowedFragments[from][msg.sender] != uint256(-1)) {
+        if (_allowedFragments[from][msg.sender] != uint256(0)) {
             _allowedFragments[from][msg.sender] = _allowedFragments[from][
                 msg.sender
             ].sub(value, "Insufficient Allowance");
