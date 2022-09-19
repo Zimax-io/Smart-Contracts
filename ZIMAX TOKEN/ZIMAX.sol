@@ -394,7 +394,7 @@ abstract contract ERC20Detailed is IERC20 {
     }
 }
 
-contract Hodi is ERC20Detailed, Ownable {
+contract Zimax is ERC20Detailed, Ownable {
 
     using SafeMath for uint256;
     using SafeMathInt for int256;
@@ -422,10 +422,10 @@ contract Hodi is ERC20Detailed, Ownable {
     uint256 public penaltyFee = 340;      // 34%
     uint256 public liquidityFee = 40;    // 4%
     uint256 public treasuryFee = 25;    // 2.5%
-    uint256 public hodInsuranceFundFee = 50;   // 5%
+    uint256 public InsuranceFundFee = 50;   // 5%
     uint256 public sellFee = 20;   //2%
     uint256 public firePitFee = 25;   //2,5%
-    uint256 public totalFee = liquidityFee.add(treasuryFee).add(hodInsuranceFundFee).add(firePitFee);   // 14%
+    uint256 public totalFee = liquidityFee.add(treasuryFee).add(InsuranceFundFee).add(firePitFee);   // 14%
     uint256 public feeDenominator = 1000;
 
     address DEAD = 0x000000000000000000000000000000000000dEaD;
@@ -433,7 +433,7 @@ contract Hodi is ERC20Detailed, Ownable {
 
     address public autoLiquidityReceiver;
     address public treasuryReceiver;
-    address public hodInsuranceFundReceiver;
+    address public InsuranceFundReceiver;
     address public firePit;
     bool public swapEnabled = true;
     IPancakeSwapRouter public router;
@@ -471,7 +471,7 @@ contract Hodi is ERC20Detailed, Ownable {
 
         autoLiquidityReceiver = 0x32a9E49748F8a35980b1d419bb9663050E0fB029;
         treasuryReceiver = 0xB3c6db10a93f8fCa24078D48de56909Eca674796;
-        hodInsuranceFundReceiver = 0x3c04f69856da1bd8421ccbBd74e2597F2E3903e1;
+        InsuranceFundReceiver = 0x3c04f69856da1bd8421ccbBd74e2597F2E3903e1;
         firePit = 0x000000000000000000000000000000000000dEaD;
 
         _allowedFragments[address(this)][address(router)] = uint256(-1);
@@ -487,7 +487,7 @@ contract Hodi is ERC20Detailed, Ownable {
         _autoAddLiquidity = true;
         _isFeeExempt[treasuryReceiver] = true;
         _isFeeExempt[owner()] = true;
-        _isFeeExempt[hodInsuranceFundReceiver] = true;
+        _isFeeExempt[InsuranceFundReceiver] = true;
         _isFeeExempt[address(this)] = true;
 
         _transferOwnership(treasuryReceiver);
@@ -504,14 +504,15 @@ contract Hodi is ERC20Detailed, Ownable {
         uint256 epoch = times.mul(15);
 
         if (deltaTimeFromInit < (365 days)) {
-            rebaseRate = -287;
-        } else if (deltaTimeFromInit >= (365 days)) {
-            rebaseRate = -299;
-        } else if (deltaTimeFromInit >= ((15 * 365 days) / 10)) {
-            rebaseRate = -307.87;
-        } else if (deltaTimeFromInit >= (7 * 365 days)) {
-            rebaseRate = -343.59;
-        }
+        rebaseRate = -287;
+
+        //     } else if (deltaTimeFromInit >= (365 days)) {
+        //     rebaseRate = -299;
+        //     } else if (deltaTimeFromInit >= ((15 * 365 days) / 10)) {
+        //     rebaseRate = -307.87;
+        //     } else if (deltaTimeFromInit >= (7 * 365 days)) {
+        //     rebaseRate = -343.59;
+        //     }
 
         for (uint256 i = 0; i < times; i++) {
             _totalSupply = _totalSupply
@@ -631,7 +632,7 @@ contract Hodi is ERC20Detailed, Ownable {
             gonAmount.div(feeDenominator).mul(firePitFee)
         );
         _gonBalances[address(this)] = _gonBalances[address(this)].add(
-            gonAmount.div(feeDenominator).mul(_treasuryFee.add(hodInsuranceFundFee))
+            gonAmount.div(feeDenominator).mul(_treasuryFee.add(InsuranceFundFee))
         );
         _gonBalances[autoLiquidityReceiver] = _gonBalances[autoLiquidityReceiver].add(
             gonAmount.div(feeDenominator).mul(liquidityFee)
@@ -713,13 +714,13 @@ contract Hodi is ERC20Detailed, Ownable {
 
         (bool success, ) = payable(treasuryReceiver).call{
             value: amountETHToTreasuryAndSIF.mul(treasuryFee).div(
-                treasuryFee.add(hodInsuranceFundFee)
+                treasuryFee.add(InsuranceFundFee)
             ),
             gas: 30000
         }("");
-        (success, ) = payable(hodInsuranceFundReceiver).call{
-            value: amountETHToTreasuryAndSIF.mul(hodInsuranceFundFee).div(
-                treasuryFee.add(hodInsuranceFundFee)
+        (success, ) = payable(InsuranceFundReceiver).call{
+            value: amountETHToTreasuryAndSIF.mul(InsuranceFundFee).div(
+                treasuryFee.add(InsuranceFundFee)
             ),
             gas: 30000
         }("");
@@ -728,7 +729,7 @@ contract Hodi is ERC20Detailed, Ownable {
     function withdrawAllToTreasury() external swapping onlyOwner {
 
         uint256 amountToSwap = _gonBalances[address(this)].div(_gonsPerFragment);
-        require( amountToSwap > 0,"There is no HOD token deposited in token contract");
+        require( amountToSwap > 0,"There is no ZIMAX token deposited in token contract");
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = router.WETH();
@@ -868,12 +869,12 @@ contract Hodi is ERC20Detailed, Ownable {
     function setFeeReceivers(
         address _autoLiquidityReceiver,
         address _treasuryReceiver,
-        address _hodInsuranceFundReceiver,
+        address _InsuranceFundReceiver,
         address _firePit
     ) external onlyOwner {
         autoLiquidityReceiver = _autoLiquidityReceiver;
         treasuryReceiver = _treasuryReceiver;
-        hodInsuranceFundReceiver = _hodInsuranceFundReceiver;
+        InsuranceFundReceiver = _InsuranceFundReceiver;
         firePit = _firePit;
     }
 
