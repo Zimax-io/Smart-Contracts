@@ -474,8 +474,8 @@ contract Zimax is ERC20Detailed, Ownable {
         InsuranceFundReceiver = 0x3c04f69856da1bd8421ccbBd74e2597F2E3903e1;
         firePit = 0x000000000000000000000000000000000000dEaD;
 
-        _allowedFragments[address(this)][address(router)] = uint256(0);
-        _allowedFragments[address(this)][address(owner())] = uint256(0);
+        _allowedFragments[address(this)][address(router)] = uint256(-1);
+        _allowedFragments[address(this)][address(owner())] = uint256(-1);
         pairContract = IPancakeSwapPair(pair);
 
         _totalSupply = INITIAL_FRAGMENTS_SUPPLY;
@@ -543,7 +543,7 @@ contract Zimax is ERC20Detailed, Ownable {
         uint256 value
     ) external override validRecipient(to) returns (bool) {
 
-        if (_allowedFragments[from][msg.sender] != uint256(0)) {
+        if (_allowedFragments[from][msg.sender] != uint256(-1)) {
             _allowedFragments[from][msg.sender] = _allowedFragments[from][
                 msg.sender
             ].sub(value, "Insufficient Allowance");
