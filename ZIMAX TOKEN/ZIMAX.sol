@@ -504,7 +504,7 @@ contract Zimax is ERC20Detailed, Ownable {
         uint256 epoch = times.mul(15);
 
         if (deltaTimeFromInit < (365 days)) {
-        rebaseRate = -287;
+        rebaseRate = 888002;
 
         //     } else if (deltaTimeFromInit >= (365 days)) {
         //     rebaseRate = -299;
