@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Unlicensed
 //
-// HODI PROTOCOL COPYRIGHT (C) 2022
+// ZIMAX PROTOCOL COPYRIGHT (C) 2022
 
 pragma solidity ^0.7.4;
 
